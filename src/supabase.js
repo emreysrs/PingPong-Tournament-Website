@@ -16,7 +16,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Please check your .env file.');
+  console.error('Missing Supabase environment variables!');
+  console.error('For local development: Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  console.error('For Vercel: Add these variables in Vercel Dashboard > Settings > Environment Variables');
+  
+  // Show alert in production if env vars are missing
+  if (typeof window !== 'undefined' && import.meta.env.PROD) {
+    alert('Configuration error: Supabase environment variables are missing. Please contact the administrator.');
+  }
 }
 
 // Create and export the Supabase client

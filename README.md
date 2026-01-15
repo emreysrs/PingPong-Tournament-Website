@@ -11,12 +11,13 @@ A real-time table tennis tournament management system for EDGE Berlin dormitory.
 
 ## ✨ Features
 
-- **Real-time Score Updates** - Live match scores sync instantly across all connected clients
+- **Real-time Score Updates** - Live match scores sync instantly across all connected clients via WebSocket
 - **Player Registration** - Easy sign-up for tournament participants
 - **Admin Panel** - Create matches, update scores, manage players
+- **Supabase Auth** - Secure email/password authentication for admins
 - **Leaderboard** - Track wins/losses and rankings
 - **Mobile Optimized** - Fully responsive design for all devices
-- **Secure** - Environment-based configuration, RLS policies
+- **Secure** - Environment-based configuration, RLS policies, no hardcoded secrets
 
 ---
 
@@ -32,8 +33,8 @@ A real-time table tennis tournament management system for EDGE Berlin dormitory.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/pingpongwebsite.git
-   cd pingpongwebsite
+   git clone https://github.com/emreysrs/PingPong-Tournament-Website.git
+   cd PingPong-Tournament-Website
    ```
 
 2. **Install dependencies**
@@ -100,7 +101,7 @@ A real-time table tennis tournament management system for EDGE Berlin dormitory.
 
 ### One-Click Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/pingpongwebsite)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/emreysrs/PingPong-Tournament-Website)
 
 ### Manual Deployment
 

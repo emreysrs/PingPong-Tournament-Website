@@ -18,7 +18,7 @@ function App() {
   // Data state
   const [players, setPlayers] = useState([]);
   const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   // UI state
   const [activeTab, setActiveTab] = useState('home');
@@ -60,12 +60,17 @@ function App() {
    * Check if user is admin by looking up admins table
    */
   const checkAdminStatus = async (userId) => {
-    const { data } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', userId)
-      .single();
-    return !!data;
+    try {
+      const { data } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      return !!data;
+    } catch (err) {
+      console.warn('Admin check failed:', err);
+      return false;
+    }
   };
 
   /**
@@ -74,17 +79,27 @@ function App() {
   useEffect(() => {
     // Check for existing Supabase auth session
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const isAdminUser = await checkAdminStatus(session.user.id);
-        setIsAdmin(isAdminUser);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const isAdminUser = await checkAdminStatus(session.user.id);
+          setIsAdmin(isAdminUser);
+        }
+      } catch (err) {
+        console.warn('Auth init failed:', err);
       }
     };
     initAuth();
 
     // Restore player session from localStorage
     const savedUser = localStorage.getItem('ppUser');
-    if (savedUser) setCurrentUser(JSON.parse(savedUser));
+    if (savedUser) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('ppUser');
+      }
+    }
     
     // Initial data fetch
     fetchData();
@@ -160,30 +175,35 @@ function App() {
     const name = regName.trim();
     if (!name) return;
     
-    const { data, error } = await supabase
-      .from('players')
-      .insert([{ 
-        name: name, 
-        nickname: regNickname.trim() || null,
-        wins: 0,
-        losses: 0
-      }])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Registration error:', error);
-      alert('Registration failed: ' + error.message);
-      return;
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .insert([{ 
+          name: name, 
+          nickname: regNickname.trim() || null,
+          wins: 0,
+          losses: 0
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Registration error:', error);
+        alert('Registration failed: ' + error.message);
+        return;
+      }
+      
+      // Save user session
+      setCurrentUser(data);
+      localStorage.setItem('ppUser', JSON.stringify(data));
+      
+      // Reset form
+      setRegName('');
+      setRegNickname('');
+    } catch (err) {
+      console.error('Registration error:', err);
+      alert('Connection error. Please try again.');
     }
-    
-    // Save user session
-    setCurrentUser(data);
-    localStorage.setItem('ppUser', JSON.stringify(data));
-    
-    // Reset form
-    setRegName('');
-    setRegNickname('');
   };
 
   /**

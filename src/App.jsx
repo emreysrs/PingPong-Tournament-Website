@@ -29,8 +29,10 @@ function App() {
   const [regNickname, setRegNickname] = useState('');
   
   // Admin state
+  const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [editingMatch, setEditingMatch] = useState(null);
   const [editScore1, setEditScore1] = useState('');
   const [editScore2, setEditScore2] = useState('');
@@ -55,18 +57,47 @@ function App() {
   };
 
   /**
-   * Initialize app: load saved user, fetch data, setup real-time subscriptions
+   * Check if user is admin by looking up admins table
+   */
+  const checkAdminStatus = async (userId) => {
+    const { data } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    return !!data;
+  };
+
+  /**
+   * Initialize app: check auth session, fetch data, setup real-time subscriptions
    */
   useEffect(() => {
-    // Restore session from localStorage
+    // Check for existing Supabase auth session
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const isAdminUser = await checkAdminStatus(session.user.id);
+        setIsAdmin(isAdminUser);
+      }
+    };
+    initAuth();
+
+    // Restore player session from localStorage
     const savedUser = localStorage.getItem('ppUser');
-    const savedAdmin = localStorage.getItem('ppAdmin');
-    
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
-    if (savedAdmin === 'true') setIsAdmin(true);
     
     // Initial data fetch
     fetchData();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const isAdminUser = await checkAdminStatus(session.user.id);
+        setIsAdmin(isAdminUser);
+      } else {
+        setIsAdmin(false);
+      }
+    });
 
     // Real-time subscription for matches table
     const matchesChannel = supabase
@@ -108,6 +139,7 @@ function App() {
     return () => {
       supabase.removeChannel(matchesChannel);
       supabase.removeChannel(playersChannel);
+      subscription?.unsubscribe();
     };
   }, []);
 
@@ -155,30 +187,54 @@ function App() {
   };
 
   /**
-   * Handle admin login
+   * Handle admin login via Supabase Auth
    */
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
+    setAuthLoading(true);
     
-    // Note: In production, use a proper authentication system
-    if (adminPassword === 'edge2026') {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: adminPassword
+      });
+      
+      if (error) {
+        alert('Login failed: ' + error.message);
+        return;
+      }
+      
+      // Check if user is in admins table
+      const isAdminUser = await checkAdminStatus(data.user.id);
+      if (!isAdminUser) {
+        await supabase.auth.signOut();
+        alert('You are not authorized as admin');
+        return;
+      }
+      
       setIsAdmin(true);
-      localStorage.setItem('ppAdmin', 'true');
       setShowAdminLogin(false);
+      setAdminEmail('');
       setAdminPassword('');
-    } else {
-      alert('Incorrect password');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
   /**
-   * Handle user logout
+   * Handle user/admin logout
    */
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Sign out from Supabase Auth (for admins)
+    await supabase.auth.signOut();
+    
+    // Clear local state
     setCurrentUser(null);
     setIsAdmin(false);
     localStorage.removeItem('ppUser');
-    localStorage.removeItem('ppAdmin');
   };
 
   /**
@@ -355,15 +411,25 @@ function App() {
           ) : (
             <form onSubmit={handleAdminLogin} className="admin-form">
               <input
+                type="email"
+                placeholder="Admin Email"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+              <input
                 type="password"
-                placeholder="Admin Password"
+                placeholder="Password"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 required
                 autoComplete="current-password"
               />
               <div className="admin-buttons">
-                <button type="submit">Login</button>
+                <button type="submit" disabled={authLoading}>
+                  {authLoading ? 'Logging in...' : 'Login'}
+                </button>
                 <button type="button" onClick={() => setShowAdminLogin(false)}>
                   Cancel
                 </button>

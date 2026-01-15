@@ -115,9 +115,24 @@ A real-time table tennis tournament management system for EDGE Berlin dormitory.
 
 ## 🔐 Admin Access
 
-Default admin password: `edge2026`
+Admin authentication uses Supabase Auth. To set up an admin user:
 
-> ⚠️ **Security Note**: Change the admin password in production by modifying the `handleAdminLogin` function in `App.jsx`.
+1. **Create admin user** in Supabase Dashboard → Authentication → Users
+2. **Run SQL** to add the user to admins table:
+   ```sql
+   -- Create admins table
+   CREATE TABLE admins (
+     id UUID PRIMARY KEY REFERENCES auth.users(id),
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+   );
+   
+   ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+   CREATE POLICY "Allow read" ON admins FOR SELECT USING (true);
+   
+   -- Add your admin (replace with actual user UUID)
+   INSERT INTO admins (id) VALUES ('your-user-uuid-here');
+   ```
+3. Login with admin email/password on the website
 
 ---
 

@@ -167,21 +167,33 @@ function App() {
   };
 
   /**
-   * Handle new player registration
+   * Handle player registration or login
+   * If player exists, log them in. If not, create new player.
    */
   const handleRegister = async (e) => {
     e.preventDefault();
-    console.log('Register button clicked');
     
     const name = regName.trim();
-    if (!name) {
-      console.log('Name is empty');
-      return;
-    }
-    
-    console.log('Attempting to register:', name);
+    if (!name) return;
     
     try {
+      // First, check if player already exists
+      const { data: existingPlayer } = await supabase
+        .from('players')
+        .select('*')
+        .ilike('name', name)
+        .single();
+      
+      if (existingPlayer) {
+        // Player exists - log them in
+        setCurrentUser(existingPlayer);
+        localStorage.setItem('ppUser', JSON.stringify(existingPlayer));
+        setRegName('');
+        setRegNickname('');
+        return;
+      }
+      
+      // Player doesn't exist - create new one
       const { data, error } = await supabase
         .from('players')
         .insert([{ 
@@ -193,8 +205,6 @@ function App() {
         .select()
         .single();
       
-      console.log('Supabase response:', { data, error });
-      
       if (error) {
         console.error('Registration error:', error);
         alert('Registration failed: ' + error.message);
@@ -204,13 +214,12 @@ function App() {
       // Save user session
       setCurrentUser(data);
       localStorage.setItem('ppUser', JSON.stringify(data));
-      console.log('Registration successful:', data);
       
       // Reset form
       setRegName('');
       setRegNickname('');
     } catch (err) {
-      console.error('Registration catch error:', err);
+      console.error('Registration error:', err);
       alert('Connection error. Please try again.');
     }
   };
@@ -409,7 +418,7 @@ function App() {
       <div className="gate-container">
         <div className="gate-card">
           <h1>Ping Pong Tournament</h1>
-          <p>Register to join the competition</p>
+          <p>Enter your name to join or sign back in</p>
           
           <form onSubmit={handleRegister} className="gate-form">
             <input
@@ -422,13 +431,13 @@ function App() {
             />
             <input
               type="text"
-              placeholder="Room Number (optional)"
+              placeholder="Room Number (only for new players)"
               value={regNickname}
               onChange={(e) => setRegNickname(e.target.value)}
               autoComplete="off"
             />
             <button type="submit" className="gate-submit">
-              Join Tournament
+              Continue
             </button>
           </form>
           

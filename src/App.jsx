@@ -27,6 +27,8 @@ function App() {
   // Registration form state
   const [regName, setRegName] = useState('');
   const [regNickname, setRegNickname] = useState('');
+  const [regLoading, setRegLoading] = useState(false);
+  const [lastAttempt, setLastAttempt] = useState(0);
   
   // Admin state
   const [adminEmail, setAdminEmail] = useState('');
@@ -166,12 +168,23 @@ function App() {
     setTimeout(() => setMessage(''), 3000);
   };
 
+  // Rate limit: 3 seconds between attempts
+  const RATE_LIMIT_MS = 3000;
+
   /**
    * Handle player registration or login
    * If player exists with same name + room, log them in. If not, create new player.
    */
   const handleRegister = async (e) => {
     e.preventDefault();
+    
+    // Rate limit check
+    const now = Date.now();
+    if (now - lastAttempt < RATE_LIMIT_MS) {
+      alert('Please wait a few seconds before trying again');
+      return;
+    }
+    setLastAttempt(now);
     
     const name = regName.trim();
     const room = regNickname.trim() || null;
@@ -181,6 +194,8 @@ function App() {
       alert('Please enter your room number');
       return;
     }
+    
+    setRegLoading(true);
     
     try {
       // Check if player already exists with same name AND room
@@ -200,7 +215,6 @@ function App() {
         return;
       }
       
-      // Check if this exact name+room combo is new
       // Player doesn't exist - create new one
       const { data, error } = await supabase
         .from('players')
@@ -229,6 +243,8 @@ function App() {
     } catch (err) {
       console.error('Registration error:', err);
       alert('Connection error. Please try again.');
+    } finally {
+      setRegLoading(false);
     }
   };
 
@@ -436,6 +452,7 @@ function App() {
               onChange={(e) => setRegName(e.target.value)}
               required
               autoComplete="name"
+              disabled={regLoading}
             />
             <input
               type="text"
@@ -444,9 +461,10 @@ function App() {
               onChange={(e) => setRegNickname(e.target.value)}
               required
               autoComplete="off"
+              disabled={regLoading}
             />
-            <button type="submit" className="gate-submit">
-              Continue
+            <button type="submit" className="gate-submit" disabled={regLoading}>
+              {regLoading ? 'Please wait...' : 'Continue'}
             </button>
           </form>
           

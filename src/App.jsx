@@ -171,9 +171,15 @@ function App() {
    */
   const handleRegister = async (e) => {
     e.preventDefault();
+    console.log('Register button clicked');
     
     const name = regName.trim();
-    if (!name) return;
+    if (!name) {
+      console.log('Name is empty');
+      return;
+    }
+    
+    console.log('Attempting to register:', name);
     
     try {
       const { data, error } = await supabase
@@ -187,6 +193,8 @@ function App() {
         .select()
         .single();
       
+      console.log('Supabase response:', { data, error });
+      
       if (error) {
         console.error('Registration error:', error);
         alert('Registration failed: ' + error.message);
@@ -196,12 +204,13 @@ function App() {
       // Save user session
       setCurrentUser(data);
       localStorage.setItem('ppUser', JSON.stringify(data));
+      console.log('Registration successful:', data);
       
       // Reset form
       setRegName('');
       setRegNickname('');
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error('Registration catch error:', err);
       alert('Connection error. Please try again.');
     }
   };

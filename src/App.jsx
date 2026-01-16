@@ -422,10 +422,10 @@ function App() {
             />
             <input
               type="text"
-              placeholder="Nickname (optional)"
+              placeholder="Room Number (optional)"
               value={regNickname}
               onChange={(e) => setRegNickname(e.target.value)}
-              autoComplete="nickname"
+              autoComplete="off"
             />
             <button type="submit" className="gate-submit">
               Join Tournament
@@ -614,7 +614,7 @@ function App() {
           <div className="admin-table">
             <div className="table-header">
               <span>Name</span>
-              <span>Nickname</span>
+              <span>Room</span>
               <span>W/L</span>
               <span>Actions</span>
             </div>
@@ -758,7 +758,7 @@ function App() {
                       <span className={`rank rank-${index + 1}`}>{index + 1}</span>
                       <div className="leader-info">
                         <span className="leader-name">{player.name}</span>
-                        <span className="leader-room">{player.nickname || 'No nickname'}</span>
+                        <span className="leader-room">{player.nickname || 'No room'}</span>
                       </div>
                       <span className="leader-score">{player.wins || 0}W / {player.losses || 0}L</span>
                     </div>
@@ -838,7 +838,7 @@ function App() {
                       {player.name.charAt(0)}
                     </div>
                     <h3>{player.name}</h3>
-                    <p>{player.nickname || 'No nickname'}</p>
+                    <p>{player.nickname || 'No room'}</p>
                     <div className="player-score">{player.wins || 0}W / {player.losses || 0}L</div>
                   </div>
                 ))}

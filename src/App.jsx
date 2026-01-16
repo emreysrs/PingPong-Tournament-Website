@@ -168,20 +168,27 @@ function App() {
 
   /**
    * Handle player registration or login
-   * If player exists, log them in. If not, create new player.
+   * If player exists with same name + room, log them in. If not, create new player.
    */
   const handleRegister = async (e) => {
     e.preventDefault();
     
     const name = regName.trim();
+    const room = regNickname.trim() || null;
+    
     if (!name) return;
+    if (!room) {
+      alert('Please enter your room number');
+      return;
+    }
     
     try {
-      // First, check if player already exists
+      // Check if player already exists with same name AND room
       const { data: existingPlayer } = await supabase
         .from('players')
         .select('*')
         .ilike('name', name)
+        .ilike('nickname', room)
         .single();
       
       if (existingPlayer) {
@@ -193,12 +200,13 @@ function App() {
         return;
       }
       
+      // Check if this exact name+room combo is new
       // Player doesn't exist - create new one
       const { data, error } = await supabase
         .from('players')
         .insert([{ 
           name: name, 
-          nickname: regNickname.trim() || null,
+          nickname: room,
           wins: 0,
           losses: 0
         }])
@@ -418,7 +426,7 @@ function App() {
       <div className="gate-container">
         <div className="gate-card">
           <h1>Ping Pong Tournament</h1>
-          <p>Enter your name to join or sign back in</p>
+          <p>Enter your name and room number to join or sign back in</p>
           
           <form onSubmit={handleRegister} className="gate-form">
             <input
@@ -431,9 +439,10 @@ function App() {
             />
             <input
               type="text"
-              placeholder="Room Number (only for new players)"
+              placeholder="Room Number"
               value={regNickname}
               onChange={(e) => setRegNickname(e.target.value)}
+              required
               autoComplete="off"
             />
             <button type="submit" className="gate-submit">

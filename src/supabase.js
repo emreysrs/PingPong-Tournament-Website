@@ -2,29 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * Supabase Client Configuration
- * 
- * Environment variables are loaded from .env file (local development)
- * or from Vercel environment variables (production).
- * 
- * Required environment variables:
- * - VITE_SUPABASE_URL: Your Supabase project URL
- * - VITE_SUPABASE_ANON_KEY: Your Supabase anonymous/public key
  */
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables!');
-  console.error('For local development: Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-  console.error('For Vercel: Add these variables in Vercel Dashboard > Settings > Environment Variables');
-  
-  // Show alert in production if env vars are missing
-  if (typeof window !== 'undefined' && import.meta.env.PROD) {
-    alert('Configuration error: Supabase environment variables are missing. Please contact the administrator.');
-  }
-}
+const supabaseUrl = 'https://nytofninjfdfzfoqwudj.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55dG9mbmluamZkZnpmb3F3dWRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MTA2ODMsImV4cCI6MjA4NDA4NjY4M30.a7XHn6CtqCbci1SIrULoWIjSviieIyAoXmw6Pqhe9wM';
 
 // Create and export the Supabase client
 export const supabase = createClient(

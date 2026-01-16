@@ -214,13 +214,18 @@ function App() {
     setAuthLoading(true);
     
     try {
+      console.log('Attempting login with:', adminEmail);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: adminEmail,
         password: adminPassword
       });
       
+      console.log('Auth response:', { data, error });
+      
       if (error) {
         alert('Login failed: ' + error.message);
+        setAuthLoading(false);
         return;
       }
       
@@ -229,6 +234,7 @@ function App() {
       if (!isAdminUser) {
         await supabase.auth.signOut();
         alert('You are not authorized as admin');
+        setAuthLoading(false);
         return;
       }
       
@@ -238,7 +244,7 @@ function App() {
       setAdminPassword('');
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed');
+      alert('Login failed: ' + (error.message || 'Unknown error'));
     } finally {
       setAuthLoading(false);
     }
